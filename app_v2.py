@@ -33,10 +33,11 @@ async def read_messages(placeholder):
     """)
 
     for changelog in rs:
+        changelog.consume(100)
+        table = changelog.collapse()
         while True:
-            # sleep(1)
-            changelog.consume(1)
-            table = changelog.collapse()
+            consumed_rows = changelog.consume(1)
+            table.update(consumed_rows)
             placeholder.write(DataFrame(table, None, table.columns))
 
     # Deletes all statements created during this session
