@@ -37,6 +37,8 @@ async def read_messages(placeholder):
         table = changelog.collapse()
         while True:
             consumed_rows = changelog.consume(1)
+            if len(consumed_rows) > 0:
+               print(f'new rows={consumed_rows}')
             table.update(consumed_rows)
             placeholder.write(DataFrame(table, None, table.columns))
 
