@@ -1,0 +1,32 @@
+# 
+# Copy this file to a new .yml file and populate it with the
+# appropriate configuration values.
+#
+# General CCloud configuration
+ccloud:
+  email:       # Email address of CCloud account to use
+  password:    # Password associated with account
+  domain:      # CCloud domain (e.g. devel.cpdev.cloud)
+  org:         # Org ID (UUID)
+  env:         # Environment ID (e.g. env-xxxxxx)
+# Flink configuration
+flink:
+  subdomain:    # Flink service subdomain (e.g. flink.us-east-1.aws)
+  principal:    # Principal user ID (e.g. u-xxxxxx)
+  compute_pool: # Compute pool ID (e.g. lfcp-xxxxxx)
+  # Optional (but recommended) configuration parameters:
+  # sql.current-catalog:
+  # sql.current-database:
+
+# All top-level keys below are interpreted as catalogs/environments
+environment1:   # Environment name (change 'environment1' to your environment's name)
+  schema_registry:
+    endpoint:   # Schema Registry endpoint for this environment (e.g. https://psrc-xxxxx.us-east-1.aws.confluent.cloud)
+    key:        # Schema Registry API key
+    secret:     # Schema Registry API secret
+  # Any key directly underneath this catalog is interpreted as a cluster/database,
+  # with the exception of schema_registry
+  cluster1:     # Cluster name (change 'cluster1' to your cluster's name)
+    endpoint:   # Bootstrap endpoint (e.g. pkc-xxxxx.us-east-1.aws.confluent.cloud:9092)
+    key:        # API key for this cluster
+    secret:     # API secret for this cluster
