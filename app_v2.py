@@ -1,11 +1,12 @@
 import asyncio
+from asyncio import sleep
+
 import streamlit as st
-import pandas as pd
+from pandas import DataFrame
 from lib.config import Config
 from lib.flink import FlinkSqlInterpreter
 from lib.kafka import AvroProducer
 import random
-
 
 async def read_messages(placeholder):
     # This config contains CCloud API keys, endpoints, etc.
@@ -27,13 +28,16 @@ async def read_messages(placeholder):
 
     # Run a SQL statement over these events and render the results to the
     # console, then clean up the table when we're done
-    data = []
     rs = flink.execute("""
-    SELECT x, AVG(y) FROM table1 GROUP BY x;
+    SELECT x, AVG(y) as average FROM table1 GROUP BY x;
     """)
 
-    data = [row for changelog in rs for row in changelog.rows]
-    st.write(pd.DataFrame(data))
+    for changelog in rs:
+        while True:
+            # sleep(1)
+            changelog.consume(1)
+            table = changelog.collapse()
+            placeholder.write(DataFrame(table, None, table.columns))
 
     # Deletes all statements created during this session
     flink.cleanup()
