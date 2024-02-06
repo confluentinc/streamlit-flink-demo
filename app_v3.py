@@ -12,7 +12,7 @@ from lib.flink import Changelog
 from lib.kafka import AvroProducer
 
 
-def populate_table(widget, sql, continuous_query):
+async def populate_table(widget, sql, continuous_query):
     conf = Config('./config.yml')
     print(f'conf={conf}')
     results, schema = query(conf, sql, continuous_query)
@@ -23,7 +23,7 @@ def populate_table(widget, sql, continuous_query):
         new_data = changelog.consume(1)
         table.update(new_data)
         widget.write(DataFrame(table, None, table.columns))
-        yield
+        await asyncio.sleep(0.001)
 
 
 def query(conf, sql, continuous_query):
