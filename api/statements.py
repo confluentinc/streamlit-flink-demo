@@ -1,3 +1,7 @@
+import asyncio
+
+import aiohttp
+
 from .auth import require_dpat
 from .errors import EndpointError
 from lib.log import get_logger
@@ -26,7 +30,7 @@ class StatementsEndpoint(object):
     def __init__(self, auth, conf):
         self.auth = auth
         self.conf = conf
-        self.poll_ms = 200
+        self.poll_ms = 300
         self.name_prefix = self.conf['flink'].get('name_prefix', 'flink-client-')
         self.api_version = self.conf['flink'].get('api_version', 'v1beta1')
         self.root_url = self.generate_url()
@@ -58,70 +62,24 @@ class StatementsEndpoint(object):
         return url
 
     @require_dpat
-    def list(self, status=None, filters=None, limit=None, invert=False):
-        # Caller can supply any number of filtering functions to apply to statements
-        # before getting the result.
-        #
-        # When invert is False, these filters are applied as a conjunction: all filter
-        # functions must return true for any given statement to be included in the result.
-        #
-        # When invert is True, these filters are applied as a disjunction: if any
-        # filter evaluates to True, the statement is excluded.
-        filters = filters or []
-        if filters and not isinstance(filters, (list, tuple)):
-            filters = [filters]
-        if status:
-            if not isinstance(status, (list, tuple)):
-                status = (status,)
-            # Status comparisons are case insensitive
-            status = tuple(map(lambda s: s.lower(), status))
-            # Just make a filter function out of the status filter
-            filters.append(lambda s: s['status']['phase'].lower() in status)
-
-        count = 0
-        url = self.root_url
-        while True:
-            # If we didn't get a next url, server is done sending us statements
-            if not url:
-                break
-            # Fetch the next page
-            r = requests.get(url, headers=self.headers)
-            if r.status_code != requests.codes.ok:
-                raise StatementsEndpointError(r)
-            r = r.json()
-            statements = r['data']
-            url = r['metadata']['next']
-            for stmt in statements:
-                if invert:
-                    # Inverted filter logic, exclude statements that match
-                    # any of the filter criteria
-                    if any(f(stmt) for f in filters):
-                        continue
-                else:
-                    # Regular filter logic, exclude statements that don't match
-                    # all filter criteria. Note that an empty list of filters will
-                    # always return True.
-                    if not all(f(stmt) for f in filters):
-                        continue
-                yield stmt
-                count += 1
-                if limit and count == limit:
-                    return
-
-    @require_dpat
-    def get(self, stmt_name):
+    async def get(self, stmt_name):
         url = self.generate_url(stmt_name)
-        r = requests.get(url, headers=self.headers)
-        # Don't blow up the caller on 404, just let them deal with it however they want
-        if r.status_code == requests.codes.not_found:
-            return None
-        if r.status_code != requests.codes.ok:
-            raise StatementsEndpointError(r)
 
-        return r.json()
+        # r = requests.get(url, headers=self.headers)
+        #  use aiohttp to make the request instead of requests
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=self.headers) as r:
+                # Don't blow up the caller on 404, just let them deal with it however they want
+                if r.status == 404:
+                    return None
+                if r.status != 200:
+                    raise StatementsEndpointError(r)
+                json = await r.json()
+                return json
 
     @require_dpat
-    def create(self, sql, properties=None, prefix=None):
+    async def create(self, sql, properties=None, prefix=None):
         start_time = time.time()
         # Any properties passed to this method take precedence over configuration file
         props = copy.deepcopy(self.default_properties)
@@ -141,36 +99,22 @@ class StatementsEndpoint(object):
         }
         log.debug('submitting create statement request', extra=event)
 
-        r = requests.post(self.root_url, headers=self.headers, json=stmt)
-        end_time = time.time()
-        time_taken = end_time - start_time
-        print(f"Time taken to create statement: {time_taken}")
-        if r.status_code != requests.codes.ok:
-            raise StatementsEndpointError(r)
-
-        stmt = r.json()
-        event = {
-            'response': stmt
-        }
-        log.debug('created statement %s', stmt['name'], extra=event)
-
-        return stmt
-
-    @require_dpat
-    def delete(self, name):
-        url = self.generate_url(name)
-        r = requests.delete(url, headers=self.headers)
-        # We special case 404s here because it's easy to accidentially try to delete
-        # a statement that doesn't exist. Rather than blow up the caller on 404 in the
-        # middle of a large batch delete, let them deal with it however they want.
-        if r.status_code not in (requests.codes.not_found, requests.codes.accepted):
-            raise StatementsEndpointError(r)
-
-        # It's either 404 or 202
-        return r.status_code == requests.codes.accepted
+        # r = requests.post(self.root_url, headers=self.headers, json=stmt)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(self.root_url, headers=self.headers, json=stmt) as r:
+                end_time = time.time()
+                time_taken = end_time - start_time
+                if r.status != 200:
+                    raise StatementsEndpointError(r)
+                stmt_res = await r.json()
+                event = {
+                    'response': stmt_res
+                }
+                log.debug('created statement %s', stmt_res['name'], extra=event)
+                return stmt_res
 
     @require_dpat
-    def results(self, stmt_name, continuous_query=False):
+    async def results(self, stmt_name, continuous_query=False):
         url = self.generate_url(stmt_name, 'results')
         row_count = 0
         while True:
@@ -182,64 +126,70 @@ class StatementsEndpoint(object):
             # automatically. Like most http libraries, requests will strip the auth header
             # before following a redirect to another domain in order to avoid inadvertently
             # sending it to a domain that the original request didn't ask for.
-            r = requests.get(url, headers=self.headers, allow_redirects=False)
-            if r.status_code == requests.codes.temporary_redirect:
-                url = r.next.url
-                continue
+            # r = requests.get(url, headers=self.headers, allow_redirects=False)
 
-            if r.status_code != requests.codes.ok:
-                raise StatementsEndpointError(r)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=self.headers, allow_redirects=False) as r:
+                    if r.status == 307:
+                        url = r.next.url
+                        continue
+                    if r.status != 200:
+                        raise StatementsEndpointError(r)
 
-            r = r.json()
-            page = r['results']['data']
-            url = r['metadata']['next']
+                    r = await r.json()
 
-            if not page:
-                # Never stopping polling in continuous mode
-                if continuous_query:
-                    continue
-                else:
-                    # If the last fetch had data but this one did not, we're done polling results
-                    if row_count:
-                        break
+                    page = r['results']['data']
+                    url = r['metadata']['next']
 
-                # No data, so wait a little bit before trying again
-                # TODO(derekjn): use exponential backoff up to 1s when no results
-                time.sleep(self.poll_ms / 1000.)
-                continue
+                    if not page:
+                        # Never stopping polling in continuous mode
+                        if continuous_query:
+                            continue
+                        else:
+                            # If the last fetch had data but this one did not, we're done polling results
+                            if row_count:
+                                break
 
-            # Note that since we got data, we immediately hit the results url again for more
-            row_count += len(page)
-            for data in page:
-                # print("data=", data)
-                # Each element of data can take one of two forms (although a given statement will
-                # only return one of these formats, they won't be mixed):
-                #
-                # 1. No changelog: Each element of data looks like this:
-                # {
-                #   'row': ['value1', 'value2']
-                # }
-                #
-                # The row itself is just an array of values, one per column.
-                #
-                # 2. Changelog: Each element of data looks like this:
-                # {
-                #   'op': 0,
-                #   'row': ['value1', 'value2']
-                # }
-                #
-                # Operation is given as an integer in [0, 3]
-                #
-                # The meaning of each operation code is as follows:
-                #
-                # 0 (+I): INSERT, insert a new row into result
-                # 1 (-U): UPDATE_BEFORE, update operation, contains row before update
-                # 2 (+U): UPDATE_AFTER, update operation, contains row after update
-                # 3 (-D): DELETE, delete row from result
-                yield data
+                        # No data, so wait a little bit before trying again
+                        # TODO(derekjn): use exponential backoff up to 1s when no results
+                        time.sleep(self.poll_ms / 1000.)
+                        continue
+
+                    # Note that since we got data, we immediately hit the results url again for more
+                    row_count += len(page)
+                    for data in page:
+                        # Each element of data can take one of two forms (although a given statement will
+                        # only return one of these formats, they won't be mixed):
+                        #
+                        # 1. No changelog: Each element of data looks like this:
+                        # {
+                        #   'row': ['value1', 'value2']
+                        # }
+                        #
+                        # The row itself is just an array of values, one per column.
+                        #
+                        # 2. Changelog: Each element of data looks like this:
+                        # {
+                        #   'op': 0,
+                        #   'row': ['value1', 'value2']
+                        # }
+                        #
+                        # Operation is given as an integer in [0, 3]
+                        #
+                        # The meaning of each operation code is as follows:
+                        #
+                        # 0 (+I): INSERT, insert a new row into result
+                        # 1 (-U): UPDATE_BEFORE, update operation, contains row before update
+                        # 2 (+U): UPDATE_AFTER, update operation, contains row after update
+                        # 3 (-D): DELETE, delete row from result
+                        yield data
+                    await asyncio.sleep(0.001)
+                await asyncio.sleep(0.001)
+            await asyncio.sleep(0.001)
+        await asyncio.sleep(0.001)
 
     @require_dpat
-    def wait_for_status(self, stmt, *status, timeout=2 * 60):
+    async def wait_for_status(self, stmt, *status, timeout=2 * 60):
         if not status:
             raise ValueError('expected at least one status to wait for')
         # Ignore case for status in case the API changes
@@ -247,7 +197,7 @@ class StatementsEndpoint(object):
         start = time.time()
         name = stmt['name']
         while time.time() - start < timeout:
-            s = self.get(name)
+            s = await self.get(name)
             # Update the caller's statement with the latest metadata
             stmt.update(s)
             phase = s['status']['phase'].lower()
