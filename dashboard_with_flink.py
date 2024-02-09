@@ -53,15 +53,15 @@ async def populate_map(widget, sql, continuous_query):
     await changelog.consume(1)
     table = changelog.collapse()
     while True:
-        new_data = await changelog.consume(1)
+        new_data = await changelog.consume(10)
         table.update(new_data)
         # wait until we get the update-after to render, otherwise graphs
         # and tables content "jump" around.
         if new_data[0][0] != "-U":
             df = DataFrame(table, None, table.columns)
             df = df.astype({'latitude': float, 'longitude': float})
-            widget.map(df)
-        await asyncio.sleep(0.01)
+            widget.map(df, use_container_width=True)
+        await asyncio.sleep(0.25)
 
 
 async def populate_chart(widget, sql, continuous_query):
@@ -95,18 +95,22 @@ async def populate_chart(widget, sql, continuous_query):
 async def main():
     st.title("Streamlit ❤️ Confluent Cloud for Flink")
 
-    st.header("Tables")
-    eyecolor_frequencies_table = st.empty()
+    col1, col2 = st.columns(2)
 
-    st.header("Graphs")
-    average_balance_table = st.empty()
+    with col1:
+        st.header("Tables")
+        eyecolor_frequencies_table = st.empty()
 
-    st.header("Maps")
-    map_of_users = st.empty()
+        st.header("Graphs")
+        average_balance_table = st.empty()
+
+    with col2:
+        st.header("Maps")
+        map_of_users = st.empty()
 
     await asyncio.gather(
 
-         populate_table(eyecolor_frequencies_table, """
+        populate_table(eyecolor_frequencies_table, """
      SELECT eyeColor, count(*) AS eye_color_count FROM `user` group by eyeColor
                  """, continuous_query=True),
 
@@ -127,7 +131,8 @@ async def main():
         """, continuous_query=True),
 
         populate_map(map_of_users, """
-    SELECT latitude, longitude FROM `user`
+    SELECT 37.704 + (RAND() * (37.812 - 37.704)) AS latitude,
+    -122.527 + (RAND() * (-122.357 + 122.527)) AS longitude FROM `user`
         """, continuous_query=True)
     )
 
