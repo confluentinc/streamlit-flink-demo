@@ -1,0 +1,10 @@
+{
+  "global": {
+    "seed": -1,
+    "kafkaConfig": "kafka-config.properties",
+    "schemaRegistry": true,
+    "registryConfig": "schema-registry-config.properties",
+    "serializer": "avro",
+    "autoCreate": true
+  }
+}

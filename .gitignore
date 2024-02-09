@@ -1,2 +1,7 @@
 *.pyc
 __pycache__/
+.streamlit/
+.venv/
+config.yml
+kafka-config.properties
+schema-registry-config.properties
