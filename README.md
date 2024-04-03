@@ -10,7 +10,3 @@
     jr run user -n 10 -f 0.5s -d 100s -o kafka -s --serializer avro-generic -t user
     ```
 4. Run `streamlit run dashboard_with_flink.py`.
-
-This is what you should see: 
-![dashboard demo](img/bounding-box.png)
-
