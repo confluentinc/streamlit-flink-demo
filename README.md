@@ -12,5 +12,5 @@
 4. Run `streamlit run dashboard_with_flink.py`.
 
 This is what you should see: 
-![demo.png](demo.png)
+![dashboard-demo.png](dashboard-demo.png)
 
