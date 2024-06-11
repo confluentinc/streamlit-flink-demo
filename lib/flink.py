@@ -1,4 +1,3 @@
-from .script import SqlScript
 from api.statements import StatementsEndpoint
 from api.auth import AuthEndpoint
 from confluent_kafka.admin import AdminClient
