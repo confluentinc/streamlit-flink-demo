@@ -3,14 +3,10 @@ import asyncio
 import aiohttp
 
 from .auth import require_dpat
-from .errors import EndpointError
-from lib.log import get_logger
 import copy
 import random
 import requests
 import time
-
-log = get_logger()
 
 API_ROOT = 'https://%(subdomain)s.%(domain)s/sql/%(api_version)s'
 STMTS_PATH = '/organizations/%(org)s/environments/%(env)s/statements'
@@ -97,7 +93,7 @@ class StatementsEndpoint(object):
         event = {
             'request': stmt
         }
-        log.debug('submitting create statement request', extra=event)
+        print('submitting create statement request', extra=event)
 
         # r = requests.post(self.root_url, headers=self.headers, json=stmt)
         async with aiohttp.ClientSession() as session:
@@ -110,7 +106,7 @@ class StatementsEndpoint(object):
                 event = {
                     'response': stmt_res
                 }
-                log.debug('created statement %s', stmt_res['name'], extra=event)
+                print('created statement %s', stmt_res['name'], extra=event)
                 return stmt_res
 
     @require_dpat

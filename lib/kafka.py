@@ -1,13 +1,8 @@
-from .log import get_logger
 from confluent_kafka import Producer
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroSerializer
 from confluent_kafka.serialization import SerializationContext, MessageField
 import functools
-
-
-log = get_logger()
-
 
 # Mapping from message key to the configuration field we can use
 # as a fallback if the message doesn't contain the expected key
@@ -64,7 +59,7 @@ class AvroProducer(object):
   def flush(self):
     for (env, cluster), producer in self._producers.items():
       producer.flush()
-      log.debug('flushed %s.%s producer', env, cluster)
+      print('flushed %s.%s producer', env, cluster)
 
   def preflight(self, message):
     for f in ('topic', 'row'):
@@ -110,7 +105,7 @@ class AvroProducer(object):
         serializer = self.get_serializer(env, topic)
         producer.produce(topic=topic, key=key,
           value=serializer(row, SerializationContext(topic, MessageField.VALUE)))
-        log.debug('produced to %s.%s: %s', env, cluster, row)
+        print('produced to %s.%s: %s', env, cluster, row)
       self.flush()
     except Exception as e:
-      log.exception(e)
+      print(e)

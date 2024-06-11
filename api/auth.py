@@ -1,4 +1,3 @@
-from .errors import EndpointError
 import requests
 import time
 

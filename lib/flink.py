@@ -1,5 +1,4 @@
 from .script import SqlScript
-from .log import get_logger
 from api.statements import StatementsEndpoint
 from api.auth import AuthEndpoint
 from confluent_kafka.admin import AdminClient
@@ -9,8 +8,6 @@ import functools
 import os
 import time
 import sys
-
-log = get_logger()
 
 
 # Simple class extending list that encapsulates a table generated from a
@@ -38,7 +35,7 @@ class Table(list):
     def update(self, rows):
         def remove(r):
             if r not in self:
-                log.warning('no corresponding row in table to remove: %s', r)
+                print('no corresponding row in table to remove: %s', r)
                 return
             self.remove(r)
 
@@ -308,7 +305,7 @@ class FlinkClient(object):
         result = admin.delete_topics([table])
         result[table].result()
         dropped.append(table)
-        log.debug('deleted topic %s.%s', database, table)
+        print('deleted topic %s.%s', database, table)
         try:
             key = '%s-key' % table
             value = '%s-value' % table
@@ -316,10 +313,10 @@ class FlinkClient(object):
             for subject in subjects:
                 sr.delete_subject(subject, permanent=True)
                 dropped.append(subject)
-                log.debug(' deleted subject %s', subject)
+                print(' deleted subject %s', subject)
             return dropped
         except SchemaRegistryError as sre:
-            log.warning(sre)
+            print(sre)
 
 
 def rows_expected(stmt):
@@ -514,7 +511,7 @@ class FlinkSqlInterpreter(FlinkClient):
             'statement': ready,
             'properties': result_set.properties
         }
-        log.debug('added %s result set', ready['name'], extra=event)
+        print('added %s result set', ready['name'], extra=event)
 
         return result_set
 
@@ -578,7 +575,7 @@ class FlinkSqlInterpreter(FlinkClient):
             return
         for name in self.state.keys():
             if not self.statements.delete(name):
-                log.warning('statement %s does not exist', name)
+                print('statement %s does not exist', name)
             else:
-                log.debug('deleted statement %s', name)
+                print('deleted statement %s', name)
         self.state.clear()
