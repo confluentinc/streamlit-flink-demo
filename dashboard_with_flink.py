@@ -23,10 +23,6 @@ async def query(conf, sql, continuous_query):
     return results, schema
 
 
-def random_array_of_tuples(n):
-    return [(random.randint(1, 10), random.randint(1, 1000)) for _ in range(n)]
-
-
 async def populate_table(widget, sql, continuous_query):
     conf = Config('./config.yml')
     results, schema = await query(conf, sql, continuous_query)
