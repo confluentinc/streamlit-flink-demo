@@ -1,22 +1,31 @@
+from configparser import ConfigParser
 import asyncio
 import random
 import altair as alt
 import streamlit as st
 from pandas import DataFrame
 
-from api.auth import AuthEndpoint
 from api.statements import StatementsEndpoint
 from lib.config import Config
 from lib.flink import Changelog
 
 
-async def query(conf, sql, continuous_query):
-    auth = AuthEndpoint(conf)
-    statements = StatementsEndpoint(auth, conf)
+def read_config(config_file='config.ini'):
+    config = ConfigParser()
+    config.read(config_file)
+    if not config.sections():
+        print(f'Cannot read configuration file: {config_file}')
+        return None
+    return config
 
+
+async def query(sql, continuous_query):
+    config = read_config()
+    statements = StatementsEndpoint(config)
     stmt = await statements.create(sql)
     ready = await statements.wait_for_status(stmt, 'running', 'completed')
-    schema = ready['status']['result_schema']
+    print(f'query status: {ready}')
+    schema = ready['status']['traits']['schema']
     name = ready['name']
     # this is an async generator, not a blocking function
     results = statements.results(name, continuous_query)
@@ -24,8 +33,7 @@ async def query(conf, sql, continuous_query):
 
 
 async def populate_table(widget, sql, continuous_query):
-    conf = Config('./config.yml')
-    results, schema = await query(conf, sql, continuous_query)
+    results, schema = await query(sql, continuous_query)
     changelog = Changelog(schema, results)
     await changelog.consume(1)
     table = changelog.collapse()
@@ -43,8 +51,7 @@ async def populate_table(widget, sql, continuous_query):
 
 
 async def populate_map(widget, sql, continuous_query):
-    conf = Config('./config.yml')
-    results, schema = await query(conf, sql, continuous_query)
+    results, schema = await query(sql, continuous_query)
     changelog = Changelog(schema, results)
     await changelog.consume(1)
     table = changelog.collapse()
@@ -61,8 +68,7 @@ async def populate_map(widget, sql, continuous_query):
 
 
 async def populate_chart(widget, sql, continuous_query):
-    conf = Config('./config.yml')
-    results, schema = await query(conf, sql, continuous_query)
+    results, schema = await query(sql, continuous_query)
     changelog = Changelog(schema, results)
     await changelog.consume(1)
     table = changelog.collapse()
@@ -133,5 +139,5 @@ async def main():
     )
 
 
-# if __name__ == "__main__":
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
