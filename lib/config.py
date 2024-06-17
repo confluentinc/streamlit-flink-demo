@@ -52,27 +52,3 @@ class Config(dict):
       del dbs['schema_registry']
 
     return d
-
-  def sanitized(self):
-    # Mapping of field names to mask, and how many bytes to leave unmasked
-    secrets = {
-      'password': 0,
-      'secret': 4
-    }
-    def mask(s, keep=0):
-      unmasked = s[(len(s) - keep):]
-      return '...' + unmasked
-    def sanitize(d):
-      r = {}
-      for k, v in d.items():
-        if k in secrets:
-          v = mask(v, keep=secrets[k])
-        if isinstance(v, dict):
-          v = sanitize(v)
-        r[k] = v
-      return r
-
-    result = {}
-    for s in self.keys():
-      result[str(s)] = sanitize(self[s])
-    return result
