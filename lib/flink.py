@@ -21,6 +21,7 @@ import sys
 class Table(list):
 
     def __init__(self, columns):
+        super().__init__()
         self.columns = columns
 
     def update(self, rows):
@@ -44,7 +45,7 @@ class Table(list):
             handlers[op](row)
 
 
-# Lightweight wrapper around result sets returned by the API. Encapsultes
+# Lightweight wrapper around result sets returned by the API. Encapsulates
 # things that are useful when dealing with result sets, such as statement
 # start time (latency), schema, rows, and functionality for interpreting its
 # underlying changelog.
