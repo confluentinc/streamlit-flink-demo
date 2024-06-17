@@ -2,6 +2,6 @@
 __pycache__/*
 .streamlit/
 .venv/
-config.yml
+config.ini
 kafka-config.properties
 schema-registry-config.properties
