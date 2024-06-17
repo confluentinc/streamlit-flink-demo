@@ -1,12 +1,9 @@
 from configparser import ConfigParser
 import asyncio
-import random
 import altair as alt
 import streamlit as st
 from pandas import DataFrame
-
 from api.statements import StatementsEndpoint
-from lib.config import Config
 from lib.flink import Changelog
 
 
