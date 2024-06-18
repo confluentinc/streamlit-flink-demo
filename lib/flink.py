@@ -50,46 +50,17 @@ class Table(list):
 # start time (latency), schema, rows, and functionality for interpreting its
 # underlying changelog.
 
-# Callers may retrieve the raw changelog consumed thus far, which is serialized
-# as a list. Each changelog element is a tuple of the form:
-#
-#   <op code, column1, column2, ...>
-#
-# Callers may also collapse the changelog consumed thus far, which will scan
-# the changelog and apply inserts, updates and deletes as necessary. Tables
-# may be obtained by calling the collapse() method. They have the following form:
-#
-#    <column1, column2, ...>
-#
-# These table rows are returned within a Table instance.
-#
-# Changelogs also inherit all in-context SET properties from when their
-# corresponding statements were executed by the interpreter, giving users
-# control over how they are displayed.
 class Changelog(object):
 
     def __init__(self, schema, rows, statement=None, ts=None, properties=None):
-        # It's easier to always work with generators instead of having to special
-        # case arrays. If it's already a generator this is a noop. Wrapping changelog
-        # records in an iterator is also good for correctness, as it ensures that this
-        # changelog's history can only be scanned sequentially. If callers want to work
-        # with changelog records more freely, they can simply wrap the changelog in a list.
         self.rows = rows
         self.statement = statement or {}
         self.properties = properties or {}
         self.ts = ts
         self.history = []
-        # Schema associated with the raw rows encapsulated within this Changelog
         self.internal_schema = schema
-        # Columns in the flattened scan result of this changelog
         self.columns = [c['name'] for c in self.internal_schema['columns']]
         self.columns.insert(0, 'op')
-        # Set for keeping track of all unique valid op codes received by this changelog.
-        # This is used to determine whether or not it's a real changelog. Certain API
-        # responses (such as for SHOW TABLES) will not include op codes in the result.
-        # However, it's convenient to treat all server responses as changelogs rather than
-        # special case them, so if we have a changelog that's not a real changelog, this
-        # set allows us to identify that scenario and just scan it as a table instead.
         self.ops_received = set()
 
     def collapse(self):
@@ -105,7 +76,6 @@ class Changelog(object):
             2: '+U',
             3: '-D'
         }
-        # print("[validate] data=", data, type(data))
         op = data.get('op')
         row = list(data['row'])
         # Note that we're validating incoming rows against the schema this
