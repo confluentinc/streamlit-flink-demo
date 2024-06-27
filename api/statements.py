@@ -90,7 +90,7 @@ class StatementsEndpoint(object):
             'response': stmt
         }
         stmt_name = stmt['name']
-        print(f'created statement: {stmt_name}, event:{event}')
+        print(f'created statement: {stmt_name}')
         return stmt
 
     def next_results(self, url):
@@ -117,7 +117,6 @@ class StatementsEndpoint(object):
             # automatically. Like most http libraries, requests will strip the auth header
             # before following a redirect to another domain in order to avoid inadvertently
             # sending it to a domain that the original request didn't ask for.
-            # print(f'requesting results with url {url}')
             r = requests.get(url, headers=self.headers, allow_redirects=False)
             if r.status_code == requests.codes.temporary_redirect:
                 url = r.next.url
@@ -135,17 +134,11 @@ class StatementsEndpoint(object):
                 # What if the statement just never returned any results?
                 # If the last fetch had data but this one did not, we're done
                 if continuous_query:
-                    # time.sleep(self.poll_ms / 1000.)
-                    print(f'[statement name {stmt_name}] no data in page. continuous_query so yielding none')
                     yield None
                 elif row_count:
-                    print(f'[statement name {stmt_name}] no data in page. not continuous query, but got rows before so breaking out')
                     break
                 # TODO: use exponential backoff up to 1s when no results
-                # print(f'[statement name {stmt_name}] sleeping for 0.3s before trying to fetch next page of results')
-                #time.sleep(self.poll_ms / 1000.)
                 yield None
-                # Note that since we got data, we immediately hit the results url again for more
             else:
                 row_count += len(page)
                 for data in page:

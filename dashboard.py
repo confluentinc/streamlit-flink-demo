@@ -72,7 +72,6 @@ def create_marker(latitude, longitude):
 
 def update_table_with_changelog(query_id):
     changelog = st.session_state[query_id]['changelog']
-    print(f'Retrieved changelog with object id: {id(changelog)} for query_id: {query_id}')
     table = st.session_state[query_id]['table']
     new_data = changelog.consume(1)
     table.update(new_data)
@@ -83,7 +82,6 @@ def fetch_result_page_eye_colors():
     query_id = "eye_colors"
     run_flink_query("SELECT eyeColor, count(*) AS eye_color_count FROM `user` group by eyeColor", query_id)
     changelog = st.session_state[query_id]['changelog']
-    print(f'[fetch_result_page_eye_colors] Retrieved changelog with object id: {id(changelog)} for query_id: {query_id}')
     table = st.session_state[query_id]['table']
     new_data = changelog.consume(1)
     table.update(new_data)
@@ -105,7 +103,6 @@ def fetch_result_page_user_locations():
         query_id)
     # table, new_data = update_table_with_changelog(query_id)
     changelog = st.session_state[query_id]['changelog']
-    print(f'[fetch_result_page_user_locations] Retrieved changelog with object id: {id(changelog)} for query_id: {query_id}')
     table = st.session_state[query_id]['table']
     new_data = changelog.consume(1)
     table.update(new_data)
@@ -139,7 +136,6 @@ def fetch_result_page_users_per_age_group():
                     query_id)
     # table, new_data = update_table_with_changelog(query_id)
     changelog = st.session_state[query_id]['changelog']
-    print(f'[fetch_result_page_users_per_age_group] Retrieved changelog with object id: {id(changelog)} for query_id: {query_id}')
     table = st.session_state[query_id]['table']
     new_data = changelog.consume(1)
     table.update(new_data)
