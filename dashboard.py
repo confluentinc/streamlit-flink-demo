@@ -87,8 +87,6 @@ def fetch_result_page_eye_colors():
     table.update(new_data)
     st.session_state[query_id]['table'] = table
     st.session_state[query_id]['changelog'] = changelog
-    # table, new_data = update_table_with_changelog(query_id)
-
     # Dont' update on UPDATE_BEFORE to avoid table 'jumps'.
     if new_data and new_data[0] and new_data[0][0] != "-U":
         df = pd.DataFrame(table, None, table.columns)
@@ -101,7 +99,6 @@ def fetch_result_page_user_locations():
     run_flink_query(
         "SELECT `user`.guid, 37.7 + (RAND() * (37.77 - 37.7)) AS latitude, -122.50 + (RAND() * (-122.39 - (- 122.50))) AS longitude FROM `user`",
         query_id)
-    # table, new_data = update_table_with_changelog(query_id)
     changelog = st.session_state[query_id]['changelog']
     table = st.session_state[query_id]['table']
     new_data = changelog.consume(1)
@@ -134,7 +131,6 @@ def fetch_result_page_users_per_age_group():
                     GROUP BY age_group
                     """,
                     query_id)
-    # table, new_data = update_table_with_changelog(query_id)
     changelog = st.session_state[query_id]['changelog']
     table = st.session_state[query_id]['table']
     new_data = changelog.consume(1)
@@ -186,7 +182,7 @@ def draw_map():
         key="user_locations_map",
         returned_objects=[],
         use_container_width=True,
-        height=400,
+        height=300,
     )
 
 
