@@ -111,5 +111,4 @@ The dashboard has 3 widgets that are updated in real time:
 
 If you want to create additional queries, just head over to the Confluent Cloud UI and play with our beautifully designed SQL workspaces.
 
-<img width="1036" alt="Flink workspace" src="https://github.com/confluentinc/streamlit-flink-demo/assets/56603/b2772d98-c09f-4c14-a57c-c15b0abba5d5">
-
+<img width="1041" alt="Flink workspace" src="https://github.com/confluentinc/streamlit-flink-demo/assets/56603/4192c891-0029-4703-9854-dfceb7820ece">
