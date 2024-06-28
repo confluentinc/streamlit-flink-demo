@@ -1,4 +1,4 @@
-# Real-time streaming dashboard with Confluent Cloud, Flink and Streamlit
+# Real-time streaming dashboard with Confluent Cloud, FlinkSQL and Streamlit
 
 🚀Let's build a real-time streaming dashboard using Confluent Cloud, Flink and Streamlit.
 
