@@ -57,7 +57,7 @@ git clone https://github.com/confluentinc/streamlit-flink-demo && cd streamlit-f
 - Create a Python virtual environment:
 
     ```shell
-    python -m venv .venv && source .venv/bin/activate
+    python3 -m venv .venv && source .venv/bin/activate
     ```
 
 - Install the required Python packages:
