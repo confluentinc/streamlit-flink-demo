@@ -1,14 +1,14 @@
-# Real-time streaming dashboard with Confluent Cloud, FlinkSQL and Streamlit
+# Real-time streaming dashboard with Kafka, Flink SQL, Streamlit and Confluent Cloud.
 
-🚀Let's build a real-time streaming dashboard using Confluent Cloud, FlinkSQL and Streamlit.
+🚀Let's build a real-time streaming dashboard using Apache Kafka, Flink SQL and Streamlit.
 
 ![streamlit_confluent_cloud_flink_small](https://github.com/confluentinc/streamlit-flink-demo/assets/56603/12c7a18c-02ad-4d1c-9c7e-84fb0b8dc0b5)
 
 [Streamlit](https://streamlit.io) is a Python library for building interactive web applications easily with Python scripts. It's ideal for creating dashboards that show real-time data.
 
-In this demo, we'll make a dashboard that shows results from a Flink job processing data in real-time.
+In this demo, we'll build a dashboard that shows results from a Flink job processing data in real-time.
 
-You don't need to know Kafka or Flink or install them to run this demo. If you work with data regularly, you likely know enough SQL to understand the Flink queries. We'll guide you through setting everything up.
+You don't need to know Apache Kafka or Apache Flink or install them to run this demo. If you work with data regularly, you likely know enough SQL to understand the Flink queries. We'll guide you through setting everything up.
 
 # Requirements
 
@@ -21,9 +21,9 @@ To run this demo, you'll need:
 
 To run the demo, just clone this repository and follow these steps:
 
-### Setup a Kafka Cluster and Flink Compute Pool in Confluent Cloud
+### Set up a Kafka Cluster and Flink Compute Pool in Confluent Cloud
 
-- No need to install Apache Kafka or Apache Flink on your computer, just follow the instructions on [Getting Started](https://docs.confluent.io/cloud/current/get-started/index.html).
+- No need to install Kafka or Flink on your computer, just follow the instructions on [Getting Started](https://docs.confluent.io/cloud/current/get-started/index.html).
 
 ### Install JR and generate data to the Kafka topic
 
