@@ -19,7 +19,13 @@ To run this demo, you'll need:
 
 # How to run the demo
 
-To run the demo, just clone this repository and follow these steps:
+To run the demo, follow these steps:
+
+### Clone this repository
+
+```shell
+git clone https://github.com/confluentinc/streamlit-flink-demo && cd streamlit-flink-demo
+```
 
 ### Set up a Kafka Cluster and Flink Compute Pool in Confluent Cloud
 
