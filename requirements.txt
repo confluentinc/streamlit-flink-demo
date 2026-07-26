@@ -1,6 +1,6 @@
 coloredlogs==15.0.1
 fastavro==1.8.3
-pandas==2.2.0
+pandas==3.0.5
 PyYAML==6.0.1
 streamlit==1.30.0
 streamlit_inspector==0.1.1
